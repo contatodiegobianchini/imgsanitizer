@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImgSanitizer - Limpeza Local de Metadados</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <div class="container mx-auto px-4 py-12 max-w-4xl">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-slate-900 mb-4">🖼️ ImgSanitizer</h1>
+            <p class="text-lg text-slate-600">Remova metadados de suas imagens de forma 100% local e privada.</p>
+        </header>
+
+        <main class="bg-white rounded-2xl shadow-xl p-8">
+            <div id="dropzone" class="border-2 border-dashed border-slate-300 rounded-xl p-12 text-center transition-colors cursor-pointer hover:border-blue-500 hover:bg-blue-50 mb-8">
+                <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/webp,image/gif" class="hidden">
+                <div class="space-y-4">
+                    <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <div class="text-slate-600">
+                        <span class="font-semibold text-blue-600">Clique para fazer upload</span> ou arraste e solte
+                    </div>
+                    <p class="text-xs text-slate-500">JPG, PNG, WebP ou GIF (Máx. 50MB por arquivo)</p>
+                </div>
+            </div>
+
+            <div id="fileList" class="space-y-4 hidden mb-8">
+                <h2 class="text-lg font-semibold text-slate-900">Arquivos Selecionados</h2>
+                <div id="selectedFiles" class="divide-y divide-slate-100"></div>
+            </div>
+
+            <div id="actionArea" class="hidden text-center">
+                <button id="sanitizeBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors shadow-lg shadow-blue-200">
+                    🧹 Sanitizar Imagens
+                </button>
+            </div>
+
+            <div id="results" class="space-y-4 hidden mt-8">
+                <h2 class="text-lg font-semibold text-slate-900">Resultados</h2>
+                <div id="processedFiles" class="divide-y divide-slate-100"></div>
+            </div>
+        </main>
+
+        <footer class="mt-12 text-center text-slate-500 text-sm">
+            <p>100% Local • Sem Cookies • Código Aberto</p>
+        </footer>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+        const selectedFilesContainer = document.getElementById('selectedFiles');
+        const actionArea = document.getElementById('actionArea');
+        const sanitizeBtn = document.getElementById('sanitizeBtn');
+        const results = document.getElementById('results');
+        const processedFilesContainer = document.getElementById('processedFiles');
+
+        let selectedFiles = [];
+
+        dropzone.onclick = () => fileInput.click();
+
+        fileInput.onchange = (e) => handleFiles(e.target.files);
+
+        dropzone.ondragover = (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-blue-500', 'bg-blue-50');
+        };
+
+        dropzone.ondragleave = () => {
+            dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+        };
+
+        dropzone.ondrop = (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-blue-500', 'bg-blue-50');
+            handleFiles(e.dataTransfer.files);
+        };
+
+        function handleFiles(files) {
+            selectedFiles = Array.from(files);
+            if (selectedFiles.length > 0) {
+                renderFileList();
+                fileList.classList.remove('hidden');
+                actionArea.classList.remove('hidden');
+                results.classList.add('hidden');
+            }
+        }
+
+        function renderFileList() {
+            selectedFilesContainer.innerHTML = selectedFiles.map(file => `
+                <div class="py-3 flex justify-between items-center">
+                    <span class="text-sm font-medium text-slate-700 truncate max-w-xs">${file.name}</span>
+                    <span class="text-xs text-slate-400">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                </div>
+            `).join('');
+        }
+
+        sanitizeBtn.onclick = async () => {
+            sanitizeBtn.disabled = true;
+            sanitizeBtn.innerHTML = '✨ Processando...';
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => formData.append('images', file));
+
+            try {
+                const response = await fetch('/api/sanitize', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    renderResults(data.images);
+                    results.classList.remove('hidden');
+                    sanitizeBtn.innerHTML = '✅ Concluído';
+                    setTimeout(() => {
+                        sanitizeBtn.disabled = false;
+                        sanitizeBtn.innerHTML = '🧹 Sanitizar Imagens';
+                    }, 2000);
+                } else {
+                    alert('Erro: ' + data.error);
+                    sanitizeBtn.disabled = false;
+                    sanitizeBtn.innerHTML = '🧹 Sanitizar Imagens';
+                }
+            } catch (error) {
+                alert('Erro ao conectar com o servidor.');
+                sanitizeBtn.disabled = false;
+                sanitizeBtn.innerHTML = '🧹 Sanitizar Imagens';
+            }
+        };
+
+        function renderResults(images) {
+            processedFilesContainer.innerHTML = images.map(img => `
+                <div class="py-4 flex justify-between items-center">
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">${img.originalName}</p>
+                        <p class="text-xs text-green-600 font-medium">Metadados Removidos!</p>
+                    </div>
+                    <a href="/api/download/${img.id}" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 px-4 rounded transition-colors">
+                        Download
+                    </a>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

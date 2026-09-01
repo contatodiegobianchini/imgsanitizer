@@ -3,7 +3,7 @@
   "version": 2,
   "functions": {
     "api/index.ts": {
-      "includeFiles": ["public/**"]
+      "includeFiles": "public/**"
     }
   },
   "rewrites": [

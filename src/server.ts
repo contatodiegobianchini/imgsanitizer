@@ -8,9 +8,10 @@ import { fileFilter } from './utils';
 
 const app = express();
 const port = process.env.PORT || 3000;
+const publicDir = path.join(process.cwd(), 'public');
 
 app.use(cors());
-app.use(express.static('public'));
+app.use(express.static(publicDir));
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -58,6 +59,10 @@ app.get('/api/download/:id', (req, res) => {
   res.send(image.buffer);
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+if (!process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+}
+
+export default app;

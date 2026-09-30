@@ -1,29 +1,32 @@
 # 🖼️ ImgSanitizer
 
-Uma aplicação web open-source, 100% local, para limpeza em massa de metadados de imagens. Prepare suas imagens para postagem perfeita em redes sociais removendo EXIF, GPS, dados de câmera e outros metadados sensíveis.
+Aplicação web open-source para remover metadados sensíveis de imagens antes do compartilhamento, incluindo EXIF, GPS, informações de câmera, autor e timestamps.
+
+## 🌐 Live Preview
+
+Teste a versão publicada na Vercel:
+
+**https://imgsanitizer.vercel.app**
+
+> No live preview, a imagem é enviada por HTTPS para uma Vercel Function, processada em memória e devolvida imediatamente. O código da aplicação não salva a imagem em banco de dados, disco ou armazenamento persistente. Para máxima privacidade e limites maiores, execute o projeto localmente.
 
 ## ✨ Características
 
-- **🔒 Completamente Local**: Todos os arquivos são processados no seu navegador e servidor local. Nenhum upload para a nuvem.
-- **⚡ Processamento em Massa**: Limpe múltiplas imagens simultaneamente.
-- **🧹 Limpeza Completa**: Remove:
-  - Dados EXIF (câmera, configurações)
-  - Coordenadas GPS e localização
-  - Informações de autor
-  - Timestamps
-  - Thumbnails embutidas
-  - Comentários e descrições
+- **🧹 Remoção de metadados**: reprocessa a imagem com Sharp sem preservar EXIF e outros metadados.
+- **📍 Privacidade**: remove informações como GPS, câmera, autor, timestamps, thumbnails e descrições embutidas quando presentes.
+- **⚡ Processamento em lote**: a interface aceita até 20 arquivos por seleção e processa um por vez para reduzir consumo de memória.
+- **🧠 Sem retenção pela aplicação**: cada imagem existe apenas em memória durante a requisição e o resultado é devolvido na mesma resposta.
+- **🔐 Respostas sem cache**: endpoints de processamento usam `Cache-Control: no-store`.
+- **🛡️ Hardening HTTP**: CSP, proteção contra framing, `nosniff`, política de referência e restrições de câmera/microfone/geolocalização.
+- **🎨 Interface simples**: HTML, Tailwind CSS e JavaScript sem framework no frontend.
+- **♿ Acessibilidade básica**: área de upload operável por teclado e mensagens de status via `aria-live`.
 
-- **💾 Armazenamento Temporário Persistente**: Imagens mantidas em memória por até 48 horas com auto-limpeza.
-- **📱 Social Media Ready**: Otimiza imagens para Instagram, Twitter, TikTok, Facebook, etc.
-- **🎨 Interface Intuitiva**: UI moderna com Tailwind CSS.
-- **📦 Zero Dependências Externas**: Tudo roda localmente no Node.js.
-
-## 🚀 Como Começar
+## 🚀 Como começar
 
 ### Pré-requisitos
+
 - Node.js 18+
-- npm ou yarn
+- npm
 
 ### Instalação
 
@@ -33,96 +36,150 @@ cd imgsanitizer
 npm install
 ```
 
-### Executar Desenvolvimento
+### Desenvolvimento
 
 ```bash
 npm run dev
 ```
-A aplicação estará disponível em http://localhost:3000
 
-### Build para Produção
+A aplicação ficará disponível em:
+
+```text
+http://localhost:3000
+```
+
+### Build e execução
 
 ```bash
 npm run build
 npm start
 ```
 
-## 📖 Como Usar
+### Verificação de tipos
 
-1. Acesse a aplicação em http://localhost:3000
-2. Faça upload de uma ou múltiplas imagens (JPG, PNG, WebP)
-3. Clique em "Sanitizar" para remover todos os metadados
-4. Baixe as imagens limpas, prontas para redes sociais
+```bash
+npm run check
+```
 
-## 🛠️ Stack Tecnológico
+## 📖 Como usar
 
-- **Frontend**: HTML5, CSS3, Tailwind CSS
-- **Backend**: Node.js + Express
-- **Linguagem**: TypeScript
-- **Processamento de Imagens**: Sharp
-- **Armazenamento**: In-memory com auto-limpeza (48h)
+1. Selecione ou arraste imagens JPG, PNG, WebP ou GIF.
+2. Clique em **Sanitizar imagens**.
+3. Cada arquivo é enviado individualmente para o backend.
+4. O backend remove os metadados e devolve o arquivo sanitizado na mesma requisição.
+5. O navegador cria o link de download localmente e libera o objeto quando ele não é mais necessário.
 
-## 📋 Estrutura do Projeto
+## 📏 Limites de upload
+
+O limite é calculado pelo backend e informado automaticamente à interface:
+
+- **Vercel / Live Preview:** 3 MB por imagem.
+- **Execução local:** 50 MB por imagem.
+- **Quantidade por seleção:** até 20 imagens.
+
+A margem de 3 MB no preview existe porque Vercel Functions impõem limites de payload para requisições e respostas. Em uma instalação própria, o limite pode ser alterado com:
+
+```bash
+IMG_SANITIZER_MAX_MB=25 npm start
+```
+
+O valor configurado é limitado a no máximo 100 MB pela aplicação.
+
+## 🛠️ Stack
+
+- **Frontend:** HTML5, JavaScript e Tailwind CSS
+- **Backend:** Node.js + Express
+- **Upload multipart:** Multer
+- **Linguagem do backend:** TypeScript
+- **Processamento de imagens:** Sharp
+- **Deploy de demonstração:** Vercel
+
+## 📋 Estrutura
 
 ```text
 imgsanitizer/
-├── src/
-│   ├── server.ts          # Servidor Express
-│   ├── storage.ts         # Gerenciador de armazenamento temporário
-│   ├── sanitizer.ts       # Lógica de limpeza de metadados
-│   └── utils.ts           # Funções utilitárias
+├── api/
+│   └── index.ts           # Entrada serverless para Vercel
 ├── public/
-│   ├── index.html         # Página principal
-│   └── style.css          # Estilos Tailwind
+│   ├── index.html         # Interface
+│   ├── app.js             # Lógica do frontend
+│   └── style.css          # Estilos complementares
+├── src/
+│   ├── server.ts          # Servidor e API
+│   ├── sanitizer.ts       # Sanitização via Sharp
+│   └── utils.ts           # Validação de arquivos
 ├── package.json
 ├── tsconfig.json
+├── vercel.json
 └── README.md
 ```
 
-## 🔐 Segurança e Privacidade
+## 🔐 Segurança e privacidade
 
-- ✅ Nenhum arquivo é enviado para servidores remotos
-- ✅ Processamento 100% local
-- ✅ Limpeza automática de arquivos antigos
-- ✅ Sem cookies de rastreamento
-- ✅ Código aberto e auditável
+### Versão hospedada
 
-## 📊 Limitações Conhecidas
+Na versão publicada, os arquivos precisam chegar ao backend para serem processados. A aplicação:
 
-- **Tamanho máximo de arquivo**: 50MB (configurável)
-- **Armazenamento temporário**: 48 horas
-- **Formatos suportados**: JPG, PNG, WebP, GIF
+- não grava os arquivos em banco de dados;
+- não cria arquivos temporários em disco;
+- não mantém um armazenamento de downloads;
+- não gera URLs públicas persistentes para as imagens;
+- processa apenas um arquivo por requisição;
+- devolve o resultado imediatamente;
+- não usa cookies de rastreamento.
+
+Isso descreve o comportamento do **código do ImgSanitizer**. O provedor de hospedagem e a infraestrutura de rede podem possuir suas próprias políticas operacionais.
+
+### Execução local
+
+Quando executado em `localhost`, o processamento continua passando pelo servidor Node.js da sua própria máquina, sem enviar a imagem ao deploy público.
+
+## 🧯 Proteção contra vazamento de segredos
+
+O `.gitignore` cobre, entre outros:
+
+- `.env` e variantes;
+- configuração local da Vercel;
+- certificados e chaves privadas;
+- arquivos comuns de credenciais e service accounts;
+- artefatos de build, logs e configurações locais de IDE.
+
+Nunca coloque tokens, senhas ou credenciais reais em arquivos versionados, mesmo que sejam removidos em um commit posterior: o Git mantém histórico.
+
+## 📊 Formatos suportados
+
+- JPEG / JPG
+- PNG
+- WebP
+- GIF
+
+> Alguns formatos animados podem ter comportamento dependente do suporte do Sharp e do arquivo de origem. Sempre valide o resultado antes de substituir o original.
 
 ## 🤝 Contribuindo
 
-Contribuições são bem-vindas! Siga os passos:
-
-1. Fork o repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+1. Faça um fork.
+2. Crie uma branch de feature.
+3. Faça suas alterações.
+4. Rode `npm run check` e `npm run build`.
+5. Abra um Pull Request.
 
 ## 📝 Licença
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+MIT. Consulte [LICENSE](LICENSE).
 
 ## 💡 Roadmap
 
-- [ ] Suporte para mais formatos (TIFF, BMP)
-- [ ] Preview antes/depois de metadados
-- [ ] Batch processing com fila
-- [ ] API REST para integração
-- [ ] PWA (Progressive Web App)
-- [ ] Compressão de imagem optativa
-- [ ] Suporte a video (remover metadados)
+- [ ] Preview antes/depois dos metadados
+- [ ] Testes automatizados de remoção de EXIF/GPS
+- [ ] Suporte adicional a TIFF e BMP
+- [ ] PWA
+- [ ] Compressão opcional
+- [ ] Sanitização de metadados de vídeo
 
-## 🐛 Reportar Bugs
+## 🐛 Bugs
 
-Encontrou um bug? Abra uma issue
+Encontrou um problema? Abra uma issue no GitHub.
 
 ## 📬 Contato
 
-Diego Bianchini - @contatodiegobianchini
-
-⭐ Se este projeto foi útil, considere dar uma estrela!
+Diego Bianchini — [@contatodiegobianchini](https://github.com/contatodiegobianchini)

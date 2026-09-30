@@ -1,4 +1,26 @@
-node_modules
-dist
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
 *.log
+
+# Local/editor files
 .DS_Store
+.vscode/
+.idea/
+
+# Environment variables and deployment state
+.env
+.env.*
+!.env.example
+.vercel/
+
+# Secrets and private key material
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+credentials.json
+service-account*.json

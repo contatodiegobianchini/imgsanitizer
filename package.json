@@ -1,13 +1,14 @@
 {
   "name": "imgsanitizer",
   "version": "1.0.0",
-  "description": "Uma aplicação web open-source, 100% local, para limpeza em massa de metadados de imagens.",
+  "description": "Aplicação web open-source para remoção de metadados sensíveis de imagens.",
   "main": "dist/src/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "rimraf dist && tsc",
     "start": "node dist/src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "check": "tsc --noEmit",
+    "test": "npm run check"
   },
   "repository": {
     "type": "git",
@@ -23,18 +24,14 @@
   "author": "Diego Bianchini",
   "license": "MIT",
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
-    "sharp": "^0.32.6",
-    "uuid": "^9.0.1"
+    "sharp": "^0.32.6"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.10.5",
-    "@types/uuid": "^9.0.7",
     "rimraf": "^5.0.5",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
